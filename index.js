@@ -22,6 +22,32 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
+    const db = client.db("theBookHaven");
+    const bookCollection = db.collection("books");
+
+    // find and findOne for get method
+    app.get("/books", async (req, res) => {
+      const result = await bookCollection.find().toArray();
+      res.send(result);
+    });
+
+     app.get("/search", async (req, res) => {
+      const search_text = req.query.search;
+       console.log("Search query:", search_text);
+      const result = await bookCollection
+        .find({ title: { $regex: search_text, $options: "i"} })
+        .toArray();
+        console.log('searching ',result)
+      res.send(result);
+    });
+
+
+
+
+
+
+
+    
 
     await client.db("admin").command({ ping: 1 });
     console.log(
