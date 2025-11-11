@@ -26,14 +26,15 @@ async function run() {
     // Send a ping to confirm a successful connection
     const db = client.db("theBookHaven");
     const bookCollection = db.collection("books");
+    const downloadCollection = db.collection("downloads");
 
     // find and findOne for get method
     app.get("/books", async (req, res) => {
       const result = await bookCollection.find().toArray();
       res.send(result);
     });
-    //  details books 
-      app.get("/books/:id", async (req, res) => {
+    //  details books
+    app.get("/books/:id", async (req, res) => {
       const { id } = req.params;
       console.log(id);
       const objectId = new ObjectId(id);
@@ -44,19 +45,19 @@ async function run() {
       });
     });
 
-    //  search book 
-     app.get("/search", async (req, res) => {
+    //  search book
+    app.get("/search", async (req, res) => {
       const search_text = req.query.search;
-       console.log("Search query:", search_text);
+      console.log("Search query:", search_text);
       const result = await bookCollection
-        .find({ title: { $regex: search_text, $options: "i"} })
+        .find({ title: { $regex: search_text, $options: "i" } })
         .toArray();
-        console.log('searching ',result)
+      console.log("searching ", result);
       res.send(result);
-    }); 
-     
-    // add book 
-      // insertOne
+    });
+
+    // add book
+    // insertOne
     app.post("/books", async (req, res) => {
       const data = req.body;
       console.log(data);
@@ -65,6 +66,24 @@ async function run() {
         success: true,
         result,
       });
+    });
+
+    // for my downloads
+    // post
+    app.post("/downloads/:id", async (req, res) => {
+      const data = req.body;
+      //downloads collection...
+      const result = await downloadCollection.insertOne(data);
+      res.send(result);
+    });
+
+    // download get
+    app.get("/my-downloads", async (req, res) => {
+      const email = req.query.email;
+      const result = await downloadCollection
+        .find({ userEmail: email })
+        .toArray();
+      res.send(result);
     });
 
     // update book
@@ -84,14 +103,6 @@ async function run() {
         result,
       });
     });
-
-
-
-
-
-
-
-    
 
     await client.db("admin").command({ ping: 1 });
     console.log(
