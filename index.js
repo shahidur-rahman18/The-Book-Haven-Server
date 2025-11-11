@@ -67,6 +67,24 @@ async function run() {
       });
     });
 
+    // update book
+    app.put("/books/:id", async (req, res) => {
+      const { id } = req.params;
+      const data = req.body; //data from frontend
+      // console.log(id);
+      const objectId = new ObjectId(id);
+      const filter = { _id: objectId };
+      const update = {
+        $set: data,
+      };
+      const result = await bookCollection.updateOne(filter, update);
+
+      res.send({
+        success: true,
+        result,
+      });
+    });
+
 
 
 
