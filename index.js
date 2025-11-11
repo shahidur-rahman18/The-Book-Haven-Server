@@ -7,6 +7,8 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 // fire base sdk ----------
+/*  AH7Jo0iwrIR46CEq
+ theBookHaven */
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.kpwp5y5.mongodb.net/?appName=Cluster0`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -42,6 +44,7 @@ async function run() {
       });
     });
 
+    //  search book 
      app.get("/search", async (req, res) => {
       const search_text = req.query.search;
        console.log("Search query:", search_text);
@@ -50,6 +53,18 @@ async function run() {
         .toArray();
         console.log('searching ',result)
       res.send(result);
+    }); 
+     
+    // add book 
+      // insertOne
+    app.post("/books", async (req, res) => {
+      const data = req.body;
+      console.log(data);
+      const result = await bookCollection.insertOne(data);
+      res.send({
+        success: true,
+        result,
+      });
     });
 
 
