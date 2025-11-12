@@ -1,14 +1,18 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const admin = require("firebase-admin");
 require("dotenv").config();
+const serviceAccount = require("./serviceKey.json");
 const app = express();
 const port = 3000;
 app.use(cors());
 app.use(express.json());
-// fire base sdk ----------
-/*  AH7Jo0iwrIR46CEq
- theBookHaven */
+
+//  firebase sdk
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.kpwp5y5.mongodb.net/?appName=Cluster0`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -19,6 +23,27 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
+//  middleware function
+const verifyToken = async (req, res, next) => {
+  ///// console.log(req.headers.authorization)
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res.status(401).send({
+      message: "Unauthorized access.Token not found.",
+    });
+  }
+  const token = authorization.split(" ")[1];
+  try {
+    await admin.auth().verifyIdToken(token);
+    next();
+  } catch (error) {
+    res.status(401).send({
+      message: "Unauthorized access.",
+    });
+  }
+};
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -40,16 +65,16 @@ async function run() {
       res.send(result);
     });
 
-    // comments 
-      
+    // comments
+
     app.get("/comments", async (req, res) => {
       const result = await commentCollection.find().toArray();
-      console.log('this is ',result)
+      console.log("this is ", result);
       res.send(result);
     });
 
-    // post comment 
-     app.post("/comments", async (req, res) => {
+    // post comment
+    app.post("/comments", async (req, res) => {
       const data = req.body;
       console.log(data);
       const result = await commentCollection.insertOne(data);
@@ -59,9 +84,8 @@ async function run() {
       });
     });
 
-
     //  details books
-    app.get("/books/:id", async (req, res) => {
+    app.get("/books/:id", verifyToken, async (req, res) => {
       const { id } = req.params;
       console.log(id);
       const objectId = new ObjectId(id);
@@ -74,7 +98,7 @@ async function run() {
     });
 
     //  search book
-    app.get("/search", async (req, res) => {
+    app.get("/search", verifyToken, async (req, res) => {
       const search_text = req.query.search;
       console.log("Search query:", search_text);
       const result = await bookCollection
@@ -98,7 +122,7 @@ async function run() {
 
     // for my downloads
     // post
-    app.post("/downloads/:id", async (req, res) => {
+  /*   app.post("/downloads/:id", async (req, res) => {
       const data = req.body;
       //downloads collection...
       const result = await downloadCollection.insertOne(data);
@@ -112,10 +136,10 @@ async function run() {
         .find({ userEmail: email })
         .toArray();
       res.send(result);
-    });
+    }); */
 
     // update book
-    app.put("/books/:id", async (req, res) => {
+    app.put("/books/:id",verifyToken,async (req, res) => {
       const { id } = req.params;
       const data = req.body; //data from frontend
       // console.log(id);
@@ -133,12 +157,8 @@ async function run() {
     });
 
     // delete book
-    app.delete("/books/:id", async (req, res) => {
+    app.delete("/books/:id",verifyToken, async (req, res) => {
       const { id } = req.params;
-      // console.log(id);
-      // const objectId = new ObjectId(id);
-      // const filter = { _id: objectId };
-
       const result = await bookCollection.deleteOne({ _id: new ObjectId(id) });
       res.send({
         success: true,
