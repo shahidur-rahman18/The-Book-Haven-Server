@@ -26,6 +26,7 @@ async function run() {
     // Send a ping to confirm a successful connection
     const db = client.db("theBookHaven");
     const bookCollection = db.collection("books");
+    const commentCollection = db.collection("comments");
     const downloadCollection = db.collection("downloads");
 
     // find and findOne for get method
@@ -38,6 +39,26 @@ async function run() {
       const result = await bookCollection.find(query).toArray();
       res.send(result);
     });
+
+    // comments 
+      
+    app.get("/comments", async (req, res) => {
+      const result = await commentCollection.find().toArray();
+      console.log('this is ',result)
+      res.send(result);
+    });
+
+    // post comment 
+     app.post("/comments", async (req, res) => {
+      const data = req.body;
+      console.log(data);
+      const result = await commentCollection.insertOne(data);
+      res.send({
+        success: true,
+        result,
+      });
+    });
+
 
     //  details books
     app.get("/books/:id", async (req, res) => {
@@ -111,9 +132,8 @@ async function run() {
       });
     });
 
-    
-      // delete book 
-      app.delete("/books/:id", async (req, res) => {
+    // delete book
+    app.delete("/books/:id", async (req, res) => {
       const { id } = req.params;
       // console.log(id);
       // const objectId = new ObjectId(id);
