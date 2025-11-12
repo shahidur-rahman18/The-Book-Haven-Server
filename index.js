@@ -30,15 +30,22 @@ async function run() {
 
     // find and findOne for get method
     app.get("/books", async (req, res) => {
-      const result = await bookCollection.find().toArray();
+      const email = req.query.email;
+      let query = {};
+      if (email) {
+        query = { userEmail: email };
+      }
+      const result = await bookCollection.find(query).toArray();
       res.send(result);
     });
+
     //  details books
     app.get("/books/:id", async (req, res) => {
       const { id } = req.params;
       console.log(id);
       const objectId = new ObjectId(id);
       const result = await bookCollection.findOne({ _id: objectId });
+      console.log(result);
       res.send({
         success: true,
         result,
@@ -98,6 +105,21 @@ async function run() {
       };
       const result = await bookCollection.updateOne(filter, update);
 
+      res.send({
+        success: true,
+        result,
+      });
+    });
+
+    
+      // delete book 
+      app.delete("/books/:id", async (req, res) => {
+      const { id } = req.params;
+      // console.log(id);
+      // const objectId = new ObjectId(id);
+      // const filter = { _id: objectId };
+
+      const result = await bookCollection.deleteOne({ _id: new ObjectId(id) });
       res.send({
         success: true,
         result,
